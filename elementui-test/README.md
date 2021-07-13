@@ -1,4 +1,4 @@
-# elementui-test
+# element-test
 
 ## Project setup
 ```
