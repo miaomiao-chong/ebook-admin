@@ -1,6 +1,5 @@
 <!--  -->
 <template>
-<<<<<<< HEAD
   <div>
     <el-form
       style="width:500px"
@@ -39,25 +38,11 @@
         <el-button>取消</el-button>
       </el-form-item>
     </el-form>
-=======
-  <div id="app">
-    <img src="./assets/logo.png">
-    <div>
-      <p>
-        If Element is successfully added to this project, you'll see an
-        <code v-text="'<el-button>'"></code>
-        below
-      </p>
-      <el-button>el-button</el-button>
-    </div>
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
->>>>>>> a8e66481a444b9105ea6e3c0988f435996c47ab4
   </div>
 </template>
 
 <script>
 export default {
-<<<<<<< HEAD
   data() {
     const nameValidate = (rule, value, callback) => {
       if (value.length <= 3) {
@@ -127,24 +112,3 @@ export default {
 <style lang='scss' scoped>
 // @import "assets/style/global";
 </style>
-=======
-  name: 'app',
-  components: {
-    HelloWorld
-  }
-}
-</script>
-
-<style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-</style>
-
-
->>>>>>> a8e66481a444b9105ea6e3c0988f435996c47ab4
