@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+</head>
+
+<body>
+  
+  <div id="root" @click="clickme">
+    {{message}}
+  </div>
+
+  <script>
+    // 接下来改变msg的值来使message改变
+    const state=Vue.observable({msg:"11111"})
+    const mutations={
+      setMsg(detail){
+        state.msg=detail
+      }
+    }
+    new Vue({
+      el:"#root",
+      computed:{
+        message(){
+          return state.msg
+        }
+      },
+      methods: {
+        clickme(){
+          //注意是通过mutations.setMsg进行修改的
+          mutations.setMsg(22222)
+        }
+      },
+    })
+  </script>
+</body>
+
+</html>

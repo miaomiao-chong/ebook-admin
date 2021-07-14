@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+</head>
+<body>
+  <div id="root">
+    <!-- 为什么没有显示出来呢    一定注意这里不能用驼峰-->
+    <mycpn :cpn-message="message"></mycpn>
+  </div>
+
+  <script>
+    // 现在用Vue.extend改造一下
+    const component1=Vue.extend({
+      template:"<div>{{cpnMessage}}</div>",
+      props:{
+        cpnMessage:{
+          type:String
+        }
+      }
+    })
+    Vue.component('mycpn',component1)
+    new Vue({
+      el:"#root",
+      data() {
+        return {
+          message:"这是一段字"
+        }
+      },
+      methods: {
+        
+      },
+    })
+  </script>
+</body>
+</html>

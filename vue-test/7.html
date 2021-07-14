@@ -1,0 +1,58 @@
+<!------------------------------------------------------------
+  文件名:   ch4-1.html
+  第三章:   组件通信 provide 和 inject
+  开发平台: VSCode 1.39.1
+  Vue 实战小慕读书中后台 By Sam
+------------------------------------------------------------->
+<html>
+
+<head>
+  <title>组件通信 provide 和 inject</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+</head>
+
+<body>
+  <div id="root">
+    <Test1></Test1>
+  </div>
+  <script>
+    // 组件3如何触发组件1的方法
+    function registerPlugin() {
+      Vue.component("Test1", {
+        template: "<div>Test1 <Test2/></div>",
+        provide() {
+          return {
+            elTest: this
+          }
+        },
+        methods: {
+          clickme(cpnName) {
+            console.log("这是在" + cpnName + "触发的");
+          }
+        },
+      })
+
+      Vue.component("Test2", {
+        template: "<Test3/>",
+      })
+
+      Vue.component("Test3", {
+        template:"<button @click='Test3Click'>点我</button>",  
+        inject:["elTest"],
+        methods: {
+          Test3Click() {
+           //这里想要调用组件1的方法
+            this.elTest.clickme(this.$options._componentTag)
+          }
+        },
+
+      })
+    }
+    Vue.use(registerPlugin)
+    new Vue({
+      el: '#root'
+    })
+  </script>
+</body>
+
+</html>
