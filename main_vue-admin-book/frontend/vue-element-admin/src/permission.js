@@ -6,18 +6,24 @@ import 'nprogress/nprogress.css' // progress bar style
 import { getToken } from '@/utils/auth' // get token from cookie
 import getPageTitle from '@/utils/get-page-title'
 
-NProgress.configure({ showSpinner: false }) // NProgress Configuration
-
+// 这是右侧的小圆环
+// NProgress.configure({ showSpinner: false }) // NProgress Configuration
+// 白名单页面
 const whiteList = ['/login', '/auth-redirect'] // no redirect whitelist
-
+// 全局守卫，所有路由都经过这个方法处理
+// 一定要调用next回调，要不然路由访问不到
 router.beforeEach(async(to, from, next) => {
   // start progress bar
+  // 显示进度条的功能
+
   NProgress.start()
 
   // set page title
+  // 根据配置项修改标题
   document.title = getPageTitle(to.meta.title)
 
   // determine whether the user has logged in
+  // 这个gettoken是从cookie中拿的
   const hasToken = getToken()
 
   if (hasToken) {
@@ -48,8 +54,8 @@ router.beforeEach(async(to, from, next) => {
         } catch (error) {
           // remove token and go to login page to re-login
           await store.dispatch('user/resetToken')
-          Message.error(error || 'Has Error')
-          next(`/login?redirect=${to.path}`)
+          Message.error(error || 'Has Error') // 打印错误日志
+          next(`/login?redirect=${to.path}`) // 重定向到/login?redirect=xxx
           NProgress.done()
         }
       }

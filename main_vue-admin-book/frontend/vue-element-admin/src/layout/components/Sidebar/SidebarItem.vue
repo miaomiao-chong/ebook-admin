@@ -10,8 +10,13 @@
 
     <el-submenu v-else ref="subMenu" :index="resolvePath(item.path)" popper-append-to-body>
       <template slot="title">
+        <!-- 父路由通过item组件展示 （通过render函数生成图标和title）-->
         <item v-if="item.meta" :icon="item.meta && item.meta.icon" :title="item.meta.title" />
       </template>
+      <!-- 将子路由遍历出来 同时迭代调用当前组件本身 -->
+      <!-- 这种方法和之前调用有什么区别呢，最大的区别是赋了is-nest为true -->
+      <!-- 这是干啥用的呢 控制上面el-menu-item的class
+            还赋了一个base-path 他的用途是什么呢 -->
       <sidebar-item
         v-for="child in item.children"
         :key="child.path"
@@ -82,12 +87,14 @@ export default {
       return false
     },
     resolvePath(routePath) {
+      //  isExternal:判断是否为一个http链接
       if (isExternal(routePath)) {
         return routePath
       }
       if (isExternal(this.basePath)) {
         return this.basePath
       }
+      // 如果不是的话会对这两个链接进行拼接
       return path.resolve(this.basePath, routePath)
     }
   }

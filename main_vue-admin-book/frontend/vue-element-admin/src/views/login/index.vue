@@ -45,7 +45,14 @@
         </el-form-item>
       </el-tooltip>
 
-      <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">Login</el-button>
+      <el-button
+        :loading="loading"
+        type="primary"
+        style="width:100%;margin-bottom:30px;"
+        @click.native.prevent="handleLogin"
+      >
+        Login
+      </el-button>
 
       <div style="position:relative">
         <div class="tips">
@@ -113,14 +120,19 @@ export default {
     }
   },
   watch: {
+    // 监听路由的变化
     $route: {
       handler: function(route) {
+        // redirect后面的部分就会变成query
         const query = route.query
+        console.log(query)
         if (query) {
+          // 将redirect提取出来同时将其他的参数放入到getOtherQuery
           this.redirect = query.redirect
           this.otherQuery = this.getOtherQuery(query)
         }
       },
+      // immediate ：在create的时候就会进行调用
       immediate: true
     }
   },
@@ -158,6 +170,8 @@ export default {
           this.loading = true
           this.$store.dispatch('user/login', this.loginForm)
             .then(() => {
+              // 登录成功：跳转链接 优先跳转redirect路径
+              // redirect路径不存在的话，直接跳到/(dashborad)同时将otherQuery作为query传入进来
               this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
               this.loading = false
             })
