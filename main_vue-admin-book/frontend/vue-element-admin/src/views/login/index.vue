@@ -1,11 +1,10 @@
 <template>
+
   <div class="login-container">
     <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" autocomplete="on" label-position="left">
-
       <div class="title-container">
         <h3 class="title">Login Form</h3>
       </div>
-
       <el-form-item prop="username">
         <span class="svg-container">
           <svg-icon icon-class="user" />
@@ -151,6 +150,7 @@ export default {
   },
   methods: {
     checkCapslock(e) {
+      console.log(e)
       const { key } = e
       this.capsTooltip = key && key.length === 1 && (key >= 'A' && key <= 'Z')
     },
@@ -165,9 +165,12 @@ export default {
       })
     },
     handleLogin() {
+      // 获取form表单的实例  调用validate方法
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true
+          // 调用store里的dispatch 也就是异步去调用user/login这个action
+          // 有个细节 为什么前面要加个user 因为在vuex中 指定了namespace为true
           this.$store.dispatch('user/login', this.loginForm)
             .then(() => {
               // 登录成功：跳转链接 优先跳转redirect路径

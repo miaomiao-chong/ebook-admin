@@ -33,9 +33,13 @@ const actions = {
   login({ commit }, userInfo) {
     const { username, password } = userInfo
     return new Promise((resolve, reject) => {
+      // 又传入了一个login方法   这个login是为了发起请求
       login({ username: username.trim(), password: password }).then(response => {
+        // 返回值.data.token  就能拿到token
         const { data } = response
+        // 拿到token以后会setTOken 将token保存到state中
         commit('SET_TOKEN', data.token)
+        // 这个是为了保存到cookie中
         setToken(data.token)
         resolve()
       }).catch(error => {
