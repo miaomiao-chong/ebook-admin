@@ -35,9 +35,6 @@ router.post('/login',
         }
       })
     }
-
-
-
   })
 
 router.get('/info', (req, res, next) => {
@@ -57,11 +54,5 @@ router.get('/info', (req, res, next) => {
   }else{
     new Result('用户信息查询失败').fail(res)
   }
-
-
 })
-
-
-
-
 module.exports = router
