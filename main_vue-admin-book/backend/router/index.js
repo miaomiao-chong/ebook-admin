@@ -1,6 +1,7 @@
 const express = require('express')
 const boom = require('boom')
 const userRouter = require('../router/user')
+const bookRouter = require('../router/book')
 const router = express.Router()
 const jwtAuth = require('./jwt')
 const { CODE_ERROR } = require('../utils/constant')
@@ -11,6 +12,7 @@ router.get('/', (req, res, next) => {
 })
 
 router.use('/user', userRouter)
+router.use('/book', bookRouter)
 
 // 接下来进行异常处理
 router.use((req, res, next) => {

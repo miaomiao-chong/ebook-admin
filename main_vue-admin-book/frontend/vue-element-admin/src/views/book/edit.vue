@@ -3,7 +3,6 @@
     <Detail :is-edit="isEdit" />
   </div>
 </template>
-
 <script>
 import Detail from '@/views/book/components/Detail'
 export default {
@@ -12,7 +11,7 @@ export default {
   },
   data() {
     return {
-      isEdit: false
+      isEdit: true
     }
   }
 }
