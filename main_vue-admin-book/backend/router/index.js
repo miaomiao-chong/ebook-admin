@@ -6,7 +6,7 @@ const router = express.Router()
 const jwtAuth = require('./jwt')
 const {UPLOAD_PATH}=require('../utils/constant')
 const { CODE_ERROR } = require('../utils/constant')
-const Result = require('../model/result')
+const Result = require('../model/Result')
 
 router.use(jwtAuth)
 router.get('/', (req, res, next) => {
