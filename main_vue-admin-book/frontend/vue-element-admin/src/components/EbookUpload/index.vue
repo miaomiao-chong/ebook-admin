@@ -77,11 +77,13 @@ export default {
     },
     onError(err, file, fileList) {
       console.log('上传失败')
-      console.log('err')
+      console.log({err})
+      const message=JSON.parse(err.message).msg
+      console.log(message)
       this.$message({
         type: 'error',
-        message: '上传失败，请重新上传'
-      })
+        message:`上传失败 失败原因${message}`
+      }) 
     }
   }
 }

@@ -194,11 +194,12 @@ export default {
   created() {},
   methods: {
     handleError(file, filelist) {
-      console.log('测试子传父')
-      this.$message({
-        type: 'error',
-        message: '上传失败，请重新上传'
-      })
+      // console.log('测试子传父')
+      // this.$message({
+      //   type: 'error',
+      //   message: '上传失败，请重新上传'
+      // })
+      // console.log(file)
     },
     beforeUpload(file) {
       console.log(file)
