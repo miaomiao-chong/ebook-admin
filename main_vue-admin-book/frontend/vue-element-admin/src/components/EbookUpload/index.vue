@@ -82,7 +82,7 @@ export default {
       console.log(message)
       this.$message({
         type: 'error',
-        message:`上传失败 失败原因${message}`
+        message:`上传失败 失败原因：${message}`
       }) 
     }
   }

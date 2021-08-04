@@ -16,7 +16,7 @@ router.post('/upload',
       const book = new Book(req.file)
       book.parse().then(book => {
         console.log("book:",book);
-        new Result('上传成功').success(res)
+        new Result(book,'上传成功').success(res)
       }).catch(err => {
         console.log("upload", err);
         // 告诉前端发生了解析异常

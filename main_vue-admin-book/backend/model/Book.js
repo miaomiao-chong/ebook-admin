@@ -1,6 +1,7 @@
 const { MIME_TYPE_EPUB, UPLOAD_URL, UPLOAD_PATH } = require('../utils/constant')
 const fs = require('fs')
 const Epub = require('../utils/epub')
+const xml2js = require('xml2js').parseString
 class Book {
   constructor(file, data) {
     if (file) {
@@ -100,7 +101,6 @@ class Book {
             this.author = creator || creatorFileAs || 'unknown'
             this.publisher = publisher || 'unknown'
             this.rootFile = epub.rootFile
-
             const handleGetImage = (err, file, mimetype) => {
               // console.log(err, file, mimetype);
               if (err) {
@@ -116,18 +116,146 @@ class Book {
                 fs.writeFileSync(coverPath, file, 'binary')
                 this.coverPath = `/img/${this.filename}.${suffix}`
                 this.cover = coverUrl
-           
                 resolve(this)
               }
             }
-            console.log("cover",cover);
-            epub.getImage(cover, handleGetImage)
+            try {
+              this.unzip()
+              this.parseContents(epub).then((chapters)=>{
+                this.contents=chapters
+                epub.getImage(cover, handleGetImage)
+              })
             
+              console.log("cover", cover);
+            
+            } catch (error) {
+              reject(error)
+            }
+
           }
         }
       })
       epub.parse()
     })
   }
+  unzip() {
+    const AdmZip = require('adm-zip')
+    const zip = new AdmZip(Book.genPath(this.path))
+    // zip对象的api extractAllTo()  含义是将路径下的文件进行解压，
+    // 解压以后把它放到一个新的路径下  第二个参数：是否进行覆盖
+    zip.extractAllTo(Book.genPath(this.unzipPath), true)
+  }
+  parseContents(epub) {
+    function getNcxFilePath() {
+      const spine = epub && epub.spine
+
+      const ncx = spine.toc && spine.toc.href
+      const id = spine.toc && spine.toc.id
+      const manifest = epub && epub.manifest
+      console.log("spine", spine.toc, ncx, id, manifest[id].href);
+      if (ncx) {
+        return ncx
+      } else {
+        // 这个一定会存在的，因为这是电子书的目录
+        return manifest[id].href
+      }
+    }
+
+    function findParent(array, level = 0, pid = '') {
+      return array.map(item => {
+        item.level = level
+        item.pid = pid
+        if (item.navPoint && item.navPoint.length) {
+          item.navPoint = findParent(item.navPoint, level + 1, item['$'].id)
+        } else if (item.navPoint) {
+          item.navPoint.level = level + 1
+          item.navPoint.pid = item['$'].id
+        }
+        return item
+      })
+    }
+    function flatten(array) {
+      return [].concat(...array.map(item => {
+        // 如果包含的是数组
+        if (item.navPoint && item.navPoint.length > 0) {
+          // 合并
+          return [].concat(item, ...flatten(item.navPoint))
+        } else if (item.navPoint) {
+          // 如果是个对象
+          return [].concat(item, item.navPoint)
+        }
+        return item
+      }))
+    }
+    const ncxFilePath = Book.genPath(`${this.unzipPath}/${getNcxFilePath()}`)
+    console.log(ncxFilePath);
+    if (fs.existsSync(ncxFilePath)) {
+      return new Promise((resolve, reject) => {
+        const xml = fs.readFileSync(ncxFilePath, 'utf-8')
+        const fileName = this.filename
+        // 第一个参数：buffer 第二个参数：配置 第三个：回调
+        xml2js(xml, {
+          explicitArray: false,
+          ignoreAttrs: false
+        }, function (err, result) {
+          if (err) {
+            reject(err)
+          } else {
+            console.log(result)
+            const navMap = result.ncx.navMap
+            console.log(JSON.stringify(navMap));
+            if (navMap.navPoint && navMap.navPoint.length > 0) {
+              //  目录存在的情况 对目录进行解析
+              navMap.navPoint = findParent(navMap.navPoint)
+              const newNavMap = flatten(navMap.navPoint)
+              //false 赋值了一份新的数组，不会改变原来的值
+              console.log(newNavMap === navMap.navPoint);
+              // 解析
+              const chapters = []
+              epub.flow.forEach((chapter, index) => {
+                if (index + 1 > newNavMap.length) {
+                  // flow里面的信息超过目录信息 就return
+                  return
+                } else {
+                  // 没有超过的时候
+                  // 拿到目录信息
+                  const nav = newNavMap[index]
+                  // 增加个属性（章节url）
+                  chapter.text = `${UPLOAD_URL}/unzip/${fileName}/${chapter.href}`
+                  if (nav && nav.navLabel) {
+                    chapter.label = nav.navLabel.text || ''
+                  } else {
+                    chapter.label = ''
+                  }
+                  chapter.level = nav.level
+                  chapter.pid = nav.pid
+                  chapter.navId = nav['$'].id
+                  chapter.fileName = fileName
+                  chapter.order = index + 1
+                  chapters.push(chapter)
+                  console.log(chapters);
+                }
+              })
+              console.log(epub.flow);
+              resolve(chapters)
+            } else {
+              reject(new Error('目录解析失败，目录树为0'))
+            }
+          }
+        })
+      })
+    } else {
+      throw new Error('目录对应的资源文件不存在')
+    }
+  }
+  // 生成静态方法，获得绝对路径
+  static genPath(path) {
+    if (!path.startsWith('/')) {
+      path = `/${path}`
+    }
+    return `${UPLOAD_PATH}${path}`
+  }
 }
+
+
 module.exports = Book

@@ -756,7 +756,19 @@ class EPub extends EventEmitter {
       // 如果是图片的话就调用getFile  把id和callback传入
       this.getFile(id, callback);
     } else {
-      callback(new Error("File not found"));
+      // 传入的id无法用  需要获取到coverId 判断coverId是否存在
+      // 这样就把符合条件的key返回
+      const coverId = Object.keys(this.manifest).find(key => (
+        // console.log(key,this.manifest[key]);
+        this.manifest[key].properties === 'cover-image'
+      ))
+      console.log("coverId", coverId);
+      if (coverId) {
+        this.getFile(coverId, callback)
+      } else {
+        callback(new Error("File not found"));
+      }
+
     }
   };
 
