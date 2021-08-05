@@ -54,6 +54,7 @@ class Book {
     this.author = ''
     this.publisher = ''    // 出版社
     this.contents = []    // 目录
+    this.chapterTree=[]
     this.cover = ''     // 封面图片url
     this.coverPath = ''
     this.category = -1    // 分类id
@@ -121,13 +122,14 @@ class Book {
             }
             try {
               this.unzip()
-              this.parseContents(epub).then((chapters)=>{
-                this.contents=chapters
+              this.parseContents(epub).then((chapters,chapterTree) => {
+                this.contents = chapters
+                this.contentsTree=chapterTree
                 epub.getImage(cover, handleGetImage)
               })
-            
+
               console.log("cover", cover);
-            
+
             } catch (error) {
               reject(error)
             }
@@ -201,7 +203,7 @@ class Book {
           if (err) {
             reject(err)
           } else {
-            console.log(result)
+            // console.log(result)
             const navMap = result.ncx.navMap
             console.log(JSON.stringify(navMap));
             if (navMap.navPoint && navMap.navPoint.length > 0) {
@@ -236,8 +238,28 @@ class Book {
                   console.log(chapters);
                 }
               })
+              const chapterTree = []
+              chapters.forEach(c => {
+                // 我们前面已经定义过label属性并赋值了 
+                c.children = []
+                //没有识别出pid时说明是一级目录
+                if (c.pid === '') {
+                  chapterTree.push(c)
+                } else {
+                  // pid不为空，说明有parent 先要找到parent
+                  const parent = chapters.find(_ =>
+                    // 如果一样，就找到了parent
+                    _.navId === c.pid
+                  )
+                  parent.children.push(c)
+                  
+                }
+              })
+              console.log("chapterTree",chapterTree);
+              // this.contentsTree=chapterTree
+
               console.log(epub.flow);
-              resolve(chapters)
+              resolve(chapters,chapterTree)
             } else {
               reject(new Error('目录解析失败，目录树为0'))
             }

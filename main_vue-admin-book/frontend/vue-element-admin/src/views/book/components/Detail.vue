@@ -25,7 +25,12 @@
           <Warning />
 
           <el-col :span="24">
-            <EbookUpload @onError="handleError" @onExceed="handleExceed" @beforeUpload="beforeUpload" />
+            <EbookUpload
+              @onError="handleError"
+              @onExceed="handleExceed"
+              @beforeUpload="beforeUpload"
+              @onSuccess="handleSuccess"
+            />
           </el-col>
           <el-col :span="24">
             <el-form-item style="margin-bottom: 40px" prop="title">
@@ -116,7 +121,7 @@
                 <el-col :span="12">
                   <el-form-item :label-width="labelWidth" label="文件名称：">
                     <el-input
-                      v-model="postForm.fileName"
+                      v-model="postForm.originalname"
                       placeholder="文件名称"
                       style="width: 100%"
                       disabled
@@ -132,7 +137,7 @@
                       :href="postForm.cover"
                       target="_blank"
                     >
-                      <img :src="postForm.cover" class="preview-img">
+                      <img :src="postForm.cover" class="preview-img" />
                     </a>
                     <span v-else>无</span>
                   </el-form-item>
@@ -162,53 +167,86 @@
   </div>
 </template>
 <script>
-import MDinput from '@/components/MDinput'
-import Sticky from '@/components/Sticky' // 粘性header组件
-import Warning from './Warning'
-import EbookUpload from '@/components/EbookUpload'
+import MDinput from "@/components/MDinput";
+import Sticky from "@/components/Sticky"; // 粘性header组件
+import Warning from "./Warning";
+import EbookUpload from "@/components/EbookUpload";
 const defaultForm = {
-  status: 'draft'
-}
+  status: "draft",
+};
 
 export default {
-  name: 'Detail',
+  name: "Detail",
   components: {
     MDinput,
     Sticky,
     Warning,
-    EbookUpload
+    EbookUpload,
   },
   props: {
     isEdit: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   data() {
     return {
       postForm: Object.assign({}, defaultForm),
-      labelWidth: '110px'
-    }
+      labelWidth: "110px",
+    };
   },
   computed: {},
   created() {},
   methods: {
-    handleError(file, filelist) {
-      // console.log('测试子传父')
-      // this.$message({
-      //   type: 'error',
-      //   message: '上传失败，请重新上传'
-      // })
+    setData(data) {
+      const {
+        title,
+        author,
+        publisher,
+        language,
+        rootFile,
+        cover,
+        originalname,
+        url,
+        contents,
+        contentsTree,
+        filename,
+        coverPath,
+        filePath,
+        unzipPath,
+      } = data;
+      this.postForm = {
+        title,
+        author,
+        publisher,
+        language,
+        rootFile,
+        cover,
+        url,
+        originalname,
+        contents,
+        filename,
+        coverPath,
+        filePath,
+        unzipPath,
+      };
+    },
+    handleSuccess(data) {
+      console.log(data);
+      console.log("上传成功");
+      // 将data传入setData当中
+      // setData:更新表单数据
+      this.setData(data);
+    },
+    handleError(file, filelist) {},
+    beforeUpload(file) {
       // console.log(file)
     },
-    beforeUpload(file) {
-      console.log(file)
-    }
     // handleExceed(){
     //   console.log("测试子传父");
     // }
-  }
-}
+  },
+};
 </script>
 
 <style lang="scss" scoped>
@@ -229,7 +267,10 @@ export default {
       }
     }
   }
-
+  .preview-img{
+    width: 200px;
+    height:250px
+  }
   .word-counter {
     width: 40px;
     position: absolute;

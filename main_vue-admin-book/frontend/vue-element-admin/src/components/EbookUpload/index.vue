@@ -53,8 +53,8 @@ export default {
     }
   },
   methods: {
-    onSuccess(response, file, fileList) {
-      console.log(response)
+    onSuccess(response, file, fileList){
+      // console.log(response)
       if (response.code != 0) {
         this.$emit('onError', file, fileList)
       } else {
@@ -62,7 +62,9 @@ export default {
           type: 'success',
           message: '上传成功'
         })
+        this.$emit('onSuccess',response.data)
       }
+      
     },
     onExceed() {
       this.$message({
