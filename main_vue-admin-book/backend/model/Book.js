@@ -54,7 +54,7 @@ class Book {
     this.author = ''
     this.publisher = ''    // 出版社
     this.contents = []    // 目录
-    this.chapterTree=[]
+    this.contentsTree=[]
     this.cover = ''     // 封面图片url
     this.coverPath = ''
     this.category = -1    // 分类id
@@ -121,16 +121,15 @@ class Book {
               }
             }
             try {
-              this.unzip()
-              this.parseContents(epub).then((chapters,chapterTree) => {
-                this.contents = chapters
-                this.contentsTree=chapterTree
-                epub.getImage(cover, handleGetImage)
-              })
-
-              console.log("cover", cover);
-
-            } catch (error) {
+              this.unzip() // 解压电子书
+              this.parseContents(epub)
+                .then(({ chapters, chapterTree }) => {
+                  this.contents = chapters
+                  this.contentsTree = chapterTree
+                  epub.getImage(cover, handleGetImage) // 获取封面图片
+                })
+                .catch(err => reject(err)) // 解析目录
+            }  catch (error) {
               reject(error)
             }
 
@@ -235,7 +234,7 @@ class Book {
                   chapter.fileName = fileName
                   chapter.order = index + 1
                   chapters.push(chapter)
-                  console.log(chapters);
+                  // console.log(chapters);
                 }
               })
               const chapterTree = []
@@ -255,11 +254,11 @@ class Book {
                   
                 }
               })
-              console.log("chapterTree",chapterTree);
+              console.log("257chapterTree",chapterTree);
               // this.contentsTree=chapterTree
 
               console.log(epub.flow);
-              resolve(chapters,chapterTree)
+              resolve({chapters,chapterTree})
             } else {
               reject(new Error('目录解析失败，目录树为0'))
             }

@@ -193,6 +193,7 @@ export default {
     return {
       postForm: Object.assign({}, defaultForm),
       labelWidth: "110px",
+      contentsTree:[]
     };
   },
   computed: {},
@@ -230,6 +231,8 @@ export default {
         filePath,
         unzipPath,
       };
+      this.contentsTree=contentsTree
+      console.log(contentsTree)
     },
     handleSuccess(data) {
       console.log(data);
