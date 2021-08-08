@@ -86,7 +86,10 @@ export default {
         type: 'error',
         message:`上传失败 失败原因：${message}`
       }) 
-    }
+    },
+  onRemove(file){
+     this.$emit('onRemove', file)
+  }
   }
 }
 </script>

@@ -11,7 +11,7 @@ class Book {
     }
   }
   createBookFromFile(file) {
-    console.log("createBookFromFile", file);
+    // console.log("createBookFromFile", file);
     const {
       destination,
       filename,
@@ -54,7 +54,7 @@ class Book {
     this.author = ''
     this.publisher = ''    // 出版社
     this.contents = []    // 目录
-    this.contentsTree=[]
+    this.contentsTree = []
     this.cover = ''     // 封面图片url
     this.coverPath = ''
     this.category = -1    // 分类id
@@ -64,7 +64,29 @@ class Book {
     this.originalname = originalname  // 原始名
 
   }
-  createBookFromData() {
+  createBookFromData(data) {
+    // data里的字段需要与数据库字段做映射
+    // console.log(69,data);
+    this.fileName = data.filename
+    this.cover = data.coverPath
+    this.title = data.title
+    this.author = data.author
+    this.publisher = data.publisher
+    this.bookId = data.filename
+    this.language = data.language
+    this.rootFile = data.rootFile
+    this.originalName = data.originalname
+    this.path = data.filePath
+    this.filePath = data.filePath
+    this.unzipPath = data.unzipPath
+    this.coverPath = data.coverPath
+    this.createUser = data.username
+    this.createDt = new Date().getTime()
+    this.updateDt = new Date().getTime()
+    //为0 表示是默认图书，否则代表来自于互联网（1）
+    this.updateType = data.updateType === 0 ? data.updateType : 1
+    this.category = data.category || 99
+    this.categoryText = data.categoryText || '自定义'
   }
   parse() {
     return new Promise((resolve, reject) => {
@@ -129,7 +151,7 @@ class Book {
                   epub.getImage(cover, handleGetImage) // 获取封面图片
                 })
                 .catch(err => reject(err)) // 解析目录
-            }  catch (error) {
+            } catch (error) {
               reject(error)
             }
 
@@ -251,14 +273,14 @@ class Book {
                     _.navId === c.pid
                   )
                   parent.children.push(c)
-                  
+
                 }
               })
-              console.log("257chapterTree",chapterTree);
+              // console.log("257chapterTree",chapterTree);
               // this.contentsTree=chapterTree
 
-              console.log(epub.flow);
-              resolve({chapters,chapterTree})
+              // console.log(epub.flow);
+              resolve({ chapters, chapterTree })
             } else {
               reject(new Error('目录解析失败，目录树为0'))
             }
@@ -267,6 +289,28 @@ class Book {
       })
     } else {
       throw new Error('目录对应的资源文件不存在')
+    }
+  }
+  toDb() {
+    return {
+      fileName: this.fileName,
+      cover: this.cover,
+      title: this.title,
+      author: this.author,
+      publisher: this.publisher,
+      bookId: this.bookId,
+      language: this.language,
+      rootFile: this.rootFile,
+      originalName: this.originalName,
+      filePath: this.filePath,
+      unzipPath: this.unzipPath,
+      coverPath: this.coverPath,
+      createUser: this.createUser,
+      createDt:this.createDt,
+      updateDt: this.updateDt,
+      updateType:this.updateType,
+      category: this.category,
+      categoryText: this.categoryText
     }
   }
   // 生成静态方法，获得绝对路径

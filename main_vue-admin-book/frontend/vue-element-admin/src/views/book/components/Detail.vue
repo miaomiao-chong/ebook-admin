@@ -7,15 +7,10 @@
       class="form-container"
     >
       <sticky :z-index="10" :class-name="'sub-navbar ' + postForm.status">
-        <el-button
-          v-loading="loading"
-          style="margin-left: 10px"
-          type="success"
-          @click="showHelp"
-        >
+        <el-button style="margin-left: 10px" type="success" @click="showHelp">
           显示帮助
         </el-button>
-        <el-button v-loading="loading" type="warning" @click="edit">
+        <el-button v-loading="loading" type="warning" @click="submitForm">
           <!-- 点击编辑 -->
           {{ isEdit == true ? "点击编辑" : "点击添加" }}
         </el-button>
@@ -30,6 +25,7 @@
               @onExceed="handleExceed"
               @beforeUpload="beforeUpload"
               @onSuccess="handleSuccess"
+              @onRemove="handleRemove"
             />
           </el-col>
           <el-col :span="24">
@@ -46,7 +42,11 @@
             <div>
               <el-row>
                 <el-col :span="12" class="form-item-author">
-                  <el-form-item :label-width="labelWidth" label="作者：">
+                  <el-form-item
+                    :label-width="labelWidth"
+                    label="作者："
+                    prop="author"
+                  >
                     <el-input
                       v-model="postForm.author"
                       placeholder="作者"
@@ -55,7 +55,11 @@
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
-                  <el-form-item :label-width="labelWidth" label="出版社：">
+                  <el-form-item
+                    :label-width="labelWidth"
+                    label="出版社："
+                    prop="publisher"
+                  >
                     <el-input
                       v-model="postForm.publisher"
                       placeholder="出版社"
@@ -66,7 +70,11 @@
               </el-row>
               <el-row>
                 <el-col :span="12">
-                  <el-form-item :label-width="labelWidth" label="语言：">
+                  <el-form-item
+                    :label-width="labelWidth"
+                    label="语言："
+                    prop="language"
+                  >
                     <el-input
                       v-model="postForm.language"
                       placeholder="语言"
@@ -171,8 +179,27 @@ import MDinput from "@/components/MDinput";
 import Sticky from "@/components/Sticky"; // 粘性header组件
 import Warning from "./Warning";
 import EbookUpload from "@/components/EbookUpload";
+import { createBook } from "@/api/book";
 const defaultForm = {
   status: "draft",
+  title: "",
+  author: "",
+  publisher: "",
+  language: "",
+  rootFile: "",
+  cover: "",
+  originalname: "",
+  url: "",
+  filename: "",
+  coverPath: "",
+  filePath: "",
+  unzipPath: "",
+};
+const fields = {
+  title: "书名",
+  author: "作者",
+  publisher: "出版社",
+  language: "语言",
 };
 
 export default {
@@ -190,15 +217,36 @@ export default {
     },
   },
   data() {
+    const validateRequire = (rule, value, callback) => {
+      console.log(rule);
+      if (value === "" || value.length == 0) {
+        callback(new Error(fields[rule.field] + "必须填写"));
+      } else {
+        callback();
+      }
+    };
     return {
       postForm: Object.assign({}, defaultForm),
       labelWidth: "110px",
-      contentsTree:[]
+      contentsTree: [],
+      rules: {
+        title: [{ validator: validateRequire }],
+        author: [{ validator: validateRequire }],
+        language: [{ validator: validateRequire }],
+        publisher: [{ validator: validateRequire }],
+      },
+      // loading: false,
     };
   },
   computed: {},
   created() {},
   methods: {
+    onContentClick(data) {
+      // console.log(data)
+      if (data.text) {
+        window.open(data.text);
+      }
+    },
     setData(data) {
       const {
         title,
@@ -231,8 +279,37 @@ export default {
         filePath,
         unzipPath,
       };
-      this.contentsTree=contentsTree
-      console.log(contentsTree)
+      this.contentsTree = contentsTree;
+    },
+    submitForm() {
+      this.$refs.postForm.validate((valid, fields) => {
+        // 通过验证
+        console.log(valid, fields);
+        if (valid) {
+          // const book=Object.assign({},this.postForm)
+          const book = { ...this.postForm };
+          // 无用的字段删除，让提交的体积变小点
+          delete book.contents;
+          delete book.contentsTree;
+          console.log(book);
+
+          if (!this.isEdit) {
+            // 新增电子书
+            createBook(book);
+          } else {
+            // 编辑模式(更新)
+            updateBook(book);
+          }
+        } else {
+          // 标题必须填写
+          console.log(fields[Object.keys(fields)[0]][0].message);
+          const message = fields[Object.keys(fields)[0]][0].message;
+          this.$message({
+            message,
+            type: "error",
+          });
+        }
+      });
     },
     handleSuccess(data) {
       console.log(data);
@@ -240,6 +317,11 @@ export default {
       // 将data传入setData当中
       // setData:更新表单数据
       this.setData(data);
+    },
+    handleRemove(file) {
+      console.log("remove");
+      // this.postForm = defaultForm;
+      this.postForm = Object.assign({}, defaultForm);
     },
     handleError(file, filelist) {},
     beforeUpload(file) {
@@ -270,9 +352,9 @@ export default {
       }
     }
   }
-  .preview-img{
+  .preview-img {
     width: 200px;
-    height:250px
+    height: 250px;
   }
   .word-counter {
     width: 40px;

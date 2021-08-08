@@ -1,6 +1,7 @@
 const mysql = require('mysql')
 const config = require('./config')
 const {debug}=require('../utils/constant')
+const {isObject} =require('../utils/index')
 function connect() {
   return mysql.createConnection({
     ...config
@@ -42,4 +43,48 @@ function queryOne(sql){
     })
   })
 }
-module.exports={querySql,queryOne}
+
+function insert(model,tableName){
+  // console.log("model",model);
+  return new Promise((resolve,reject)=>{
+    if(!isObject(model)){
+      reject(new Error('插入数据库失败，插入数据非对象'))
+    }else{
+      const keys=[]
+      const values=[]
+      //拿到book对象的所有key 做一个遍历
+      Object.keys(model).forEach(key=>{
+        // 这个意思是看model有没有这个key,而不是往原型链上找
+        if(model.hasOwnProperty(key)){
+          keys.push(`\`${key}\``)
+          values.push(`'${model[key]}'`)
+        }
+      })
+      // 拼sql语句
+      if(keys.length>0&&values.length>0){
+        let sql=`insert into \`${tableName}\`(`
+        const keysString=keys.join(',')
+        const valuesString=values.join(',')
+        sql=`${sql}${keysString}) values (${valuesString})`
+        console.log("sql",sql)
+        const conn=connect()
+        try {
+          conn.query(sql,(err,result)=>{
+            if(err){
+              reject(err)
+            }else{
+              resolve(result)
+            }
+          })
+        } catch (error) {
+          reject(error)
+        }finally{
+          conn.end()
+        }
+      }else{
+        reject(new Error('对象中没有任何属性'))
+      }
+    }
+  })
+}
+module.exports={querySql,queryOne,insert}
