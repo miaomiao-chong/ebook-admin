@@ -87,6 +87,7 @@ class Book {
     this.updateType = data.updateType === 0 ? data.updateType : 1
     this.category = data.category || 99
     this.categoryText = data.categoryText || '自定义'
+    this.contents=data.contents||[]
   }
   parse() {
     return new Promise((resolve, reject) => {
@@ -154,7 +155,6 @@ class Book {
             } catch (error) {
               reject(error)
             }
-
           }
         }
       })
@@ -313,12 +313,41 @@ class Book {
       categoryText: this.categoryText
     }
   }
+  // 可以联想一下java里的get set方法
+  getContents(){
+    return this.contents
+  }
+  // 删除相关文件
+  reset(){
+    console.log("fileName",this.fileName);
+    if(Book.pathExists(this.filePath)){
+      console.log("删除文件");
+      fs.unlinkSync(Book.genPath(this.filePath))
+    }
+    if(Book.pathExists(this.coverPath)){
+      console.log("删除封面");
+      fs.unlinkSync(Book.genPath(this.coverPath))
+    }
+    if(Book.pathExists(this.unzipPath)){
+      console.log("删除解压路径");
+      fs.rmdirSync(Book.genPath(this.unzipPath),{recursive:true})
+    }
+  }
   // 生成静态方法，获得绝对路径
   static genPath(path) {
     if (!path.startsWith('/')) {
       path = `/${path}`
     }
     return `${UPLOAD_PATH}${path}`
+  }
+
+  // 判断路径是否存在静态方法
+  static pathExists(path){
+    if(path.startsWith(UPLOAD_PATH)){
+      return fs.existsSync(path)
+    }else{
+      return fs.existsSync(Book.genPath(path))
+    }
   }
 }
 

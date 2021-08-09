@@ -21,6 +21,7 @@
 
           <el-col :span="24">
             <EbookUpload
+              :file-list="fileList"
               @onError="handleError"
               @onExceed="handleExceed"
               @beforeUpload="beforeUpload"
@@ -83,7 +84,11 @@
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
-                  <el-form-item :label-width="labelWidth" label="根文件：">
+                  <el-form-item
+                    :label-width="labelWidth"
+                    label="根文件："
+                    prop="rootFile"
+                  >
                     <el-input
                       v-model="postForm.rootFile"
                       placeholder="根文件"
@@ -95,7 +100,11 @@
               </el-row>
               <el-row>
                 <el-col :span="12">
-                  <el-form-item :label-width="labelWidth" label="文件路径：">
+                  <el-form-item
+                    :label-width="labelWidth"
+                    label="文件路径："
+                    prop="filePath"
+                  >
                     <el-input
                       v-model="postForm.filePath"
                       placeholder="文件路径"
@@ -105,7 +114,11 @@
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
-                  <el-form-item :label-width="labelWidth" label="解压路径：">
+                  <el-form-item
+                    :label-width="labelWidth"
+                    label="解压路径："
+                    prop="unzipPath"
+                  >
                     <el-input
                       v-model="postForm.unzipPath"
                       placeholder="解压路径"
@@ -117,7 +130,11 @@
               </el-row>
               <el-row>
                 <el-col :span="12">
-                  <el-form-item :label-width="labelWidth" label="封面路径：">
+                  <el-form-item
+                    :label-width="labelWidth"
+                    label="封面路径："
+                    prop="coverPath"
+                  >
                     <el-input
                       v-model="postForm.coverPath"
                       placeholder="封面路径"
@@ -127,7 +144,11 @@
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
-                  <el-form-item :label-width="labelWidth" label="文件名称：">
+                  <el-form-item
+                    :label-width="labelWidth"
+                    label="文件名称："
+                    prop="originalname"
+                  >
                     <el-input
                       v-model="postForm.originalname"
                       placeholder="文件名称"
@@ -139,7 +160,11 @@
               </el-row>
               <el-row>
                 <el-col :span="24">
-                  <el-form-item :label-width="labelWidth" label="封面：">
+                  <el-form-item
+                    :label-width="labelWidth"
+                    label="封面："
+                    prop="cover"
+                  >
                     <a
                       v-if="postForm.cover"
                       :href="postForm.cover"
@@ -153,7 +178,11 @@
               </el-row>
               <el-row>
                 <el-col :span="24">
-                  <el-form-item :label-width="labelWidth" label="目录：">
+                  <el-form-item
+                    :label-width="labelWidth"
+                    label="目录："
+                    prop="contents"
+                  >
                     <div
                       v-if="postForm.contents && postForm.contents.length > 0"
                       class="contents-wrapper"
@@ -215,6 +244,12 @@ export default {
       type: Boolean,
       default: false,
     },
+    fileList: {
+      type: Array,
+      default() {
+        return [];
+      },
+    },
   },
   data() {
     const validateRequire = (rule, value, callback) => {
@@ -229,6 +264,7 @@ export default {
       postForm: Object.assign({}, defaultForm),
       labelWidth: "110px",
       contentsTree: [],
+      fileList: [],
       rules: {
         title: [{ validator: validateRequire }],
         author: [{ validator: validateRequire }],
@@ -246,6 +282,12 @@ export default {
       if (data.text) {
         window.open(data.text);
       }
+    },
+    setDefault() {
+      // this.postForm = Object.assign({}, defaultForm);
+      this.contentsTree = []; // 消除目录
+      this.fileList = []; // 标题
+      this.$refs.postForm.resetFields();
     },
     setData(data) {
       const {
@@ -284,18 +326,32 @@ export default {
     submitForm() {
       this.$refs.postForm.validate((valid, fields) => {
         // 通过验证
-        console.log(valid, fields);
+        // console.log(valid, fields);
         if (valid) {
           // const book=Object.assign({},this.postForm)
           const book = { ...this.postForm };
           // 无用的字段删除，让提交的体积变小点
-          delete book.contents;
+          // delete book.contents;
           delete book.contentsTree;
-          console.log(book);
-
+          // console.log(book);
+          // console.log(this.isEdit);
           if (!this.isEdit) {
             // 新增电子书
-            createBook(book);
+            createBook(book)
+              .then((response) => {
+                console.log(response);
+                const { msg } = response;
+                console.log(msg);
+                this.$notify({
+                  title: "操作成功",
+                  message: msg,
+                  type: "success",
+                  duration: 2000,
+                });
+                // this.postForm = Object.assign({}, defaultForm);
+                this.setDefault();
+              })
+              .catch((err) => {});
           } else {
             // 编辑模式(更新)
             updateBook(book);
@@ -321,9 +377,10 @@ export default {
     handleRemove(file) {
       console.log("remove");
       // this.postForm = defaultForm;
-      this.postForm = Object.assign({}, defaultForm);
+      // this.postForm = Object.assign({}, defaultForm);
+      this.setDefault();
     },
-    handleError(file, filelist) {},
+    handleError(file, fileList) {},
     beforeUpload(file) {
       // console.log(file)
     },
