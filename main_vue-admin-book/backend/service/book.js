@@ -69,10 +69,13 @@ function updateBook(book) {
       if(book instanceof Book){
         // 获取book对象
         console.log("更改后book",book);
-        const result=await getBook(book.fileName).then((res)=>{
-          return res
-        })
+        const result=await getBook(book.fileName)
         console.log("result",result);
+        if(result){
+          const model=book.toDb()
+          await db.update(model,'book',`where fileName='${book.fileName}'`)
+          resolve()
+        }
       }else{
         reject(new Error('添加的图书对象不合法'))
       }
