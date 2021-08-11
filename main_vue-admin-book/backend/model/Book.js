@@ -11,7 +11,7 @@ class Book {
     }
   }
   createBookFromFile(file) {
-    // console.log("createBookFromFile", file);
+    console.log("createBookFromFile", file);
     const {
       destination,
       filename,
@@ -44,7 +44,7 @@ class Book {
     if (fs.existsSync(oldBookPath)) {
       fs.renameSync(oldBookPath, bookPath)
     }
-    this.filename = filename  // 无后缀的文件名
+    this.fileName = filename  // 无后缀的文件名
     // 写相对路径，为了兼容不同的场景 因为在服务端和客户端他的绝对路径是不一样
     this.path = `/book/${filename}${suffix}` // epub文件相对路径
     this.filePath = this.path    // 起一个别名  电子书相对路径
@@ -61,21 +61,21 @@ class Book {
     this.categoryText = ''  // 分类名称
     this.language = ''    // 语种
     this.unzipUrl = unzipUrl   // 解压后的文件夹链接
-    this.originalname = originalname  // 原始名
+    this.originalName = originalname  // 原始名
 
   }
   createBookFromData(data) {
     // data里的字段需要与数据库字段做映射
     // console.log(69,data);
-    this.fileName = data.filename
+    this.fileName = data.fileName
     this.cover = data.coverPath
     this.title = data.title
     this.author = data.author
     this.publisher = data.publisher
-    this.bookId = data.filename
+    this.bookId = data.fileName
     this.language = data.language
     this.rootFile = data.rootFile
-    this.originalName = data.originalname
+    this.originalName = data.originalName
     this.path = data.filePath
     this.filePath = data.filePath
     this.unzipPath = data.unzipPath
@@ -133,12 +133,12 @@ class Book {
                 // 需要整个电子书解析完之后再调用resolve,而不是直接调完getImage就resolve，
                 //因为getImage可能出错，调完resolve再调reject逻辑就会出现问题
                 const suffix = mimetype.split('/')[1]
-                const coverPath = `${UPLOAD_PATH}/img/${this.filename}.${suffix}`
-                const coverUrl = `${UPLOAD_URL}/img/${this.filename}.${suffix}`
+                const coverPath = `${UPLOAD_PATH}/img/${this.fileName}.${suffix}`
+                const coverUrl = `${UPLOAD_URL}/img/${this.fileName}.${suffix}`
                 // 把buffer写入到磁盘当中
-                console.log(coverPath);
+                // console.log(coverPath);
                 fs.writeFileSync(coverPath, file, 'binary')
-                this.coverPath = `/img/${this.filename}.${suffix}`
+                this.coverPath = `/img/${this.fileName}.${suffix}`
                 this.cover = coverUrl
                 resolve(this)
               }
@@ -175,7 +175,7 @@ class Book {
       const ncx = spine.toc && spine.toc.href
       const id = spine.toc && spine.toc.id
       const manifest = epub && epub.manifest
-      console.log("spine", spine.toc, ncx, id, manifest[id].href);
+      // console.log("spine", spine.toc, ncx, id, manifest[id].href);
       if (ncx) {
         return ncx
       } else {
@@ -211,11 +211,11 @@ class Book {
       }))
     }
     const ncxFilePath = Book.genPath(`${this.unzipPath}/${getNcxFilePath()}`)
-    console.log(ncxFilePath);
+    // console.log(ncxFilePath);
     if (fs.existsSync(ncxFilePath)) {
       return new Promise((resolve, reject) => {
         const xml = fs.readFileSync(ncxFilePath, 'utf-8')
-        const fileName = this.filename
+        const fileName = this.fileName
         // 第一个参数：buffer 第二个参数：配置 第三个：回调
         xml2js(xml, {
           explicitArray: false,
@@ -226,13 +226,13 @@ class Book {
           } else {
             // console.log(result)
             const navMap = result.ncx.navMap
-            console.log(JSON.stringify(navMap));
+            // console.log(JSON.stringify(navMap));
             if (navMap.navPoint && navMap.navPoint.length > 0) {
               //  目录存在的情况 对目录进行解析
               navMap.navPoint = findParent(navMap.navPoint)
               const newNavMap = flatten(navMap.navPoint)
               //false 赋值了一份新的数组，不会改变原来的值
-              console.log(newNavMap === navMap.navPoint);
+              // console.log(newNavMap === navMap.navPoint);
               // 解析
               const chapters = []
               epub.flow.forEach((chapter, index) => {
@@ -319,7 +319,7 @@ class Book {
   }
   // 删除相关文件
   reset(){
-    console.log("fileName",this.fileName);
+    // console.log("fileName",this.fileName);
     if(Book.pathExists(this.filePath)){
       console.log("删除文件");
       fs.unlinkSync(Book.genPath(this.filePath))

@@ -30,7 +30,7 @@ async function insertContents(book) {
         'pid',
         'navId'
       ])
-      console.log('_content', _content);
+      // console.log('_content', _content);
       await db.insert(_content, 'contents')
     }
   }
@@ -44,7 +44,7 @@ function insertBook(book) {
       if (book instanceof Book) {
         // 判断电子书是否已经上传过了
         const result = await exists(book)
-        console.log('res', result);
+        // console.log('res', result);
         if (result) {
           await removeBook(book)
           reject(new Error('电子书已存在'))
@@ -68,8 +68,10 @@ function updateBook(book) {
     try {
       if(book instanceof Book){
         // 获取book对象
-        console.log("book123",book);
-        const result=await getBook(book.filename)
+        console.log("更改后book",book);
+        const result=await getBook(book.fileName).then((res)=>{
+          return res
+        })
         console.log("result",result);
       }else{
         reject(new Error('添加的图书对象不合法'))
@@ -90,7 +92,7 @@ function getBook(fileName) {
     if(book){
       book[0].cover=Book.genCoverUrl(book[0])
       book[0].contentsTree=Book.getContentsTree(contents)
-      console.log("aaaaa",book[0]);
+      // console.log("aaaaa",book[0]);
       resolve(book[0])
     }else{
       reject(new Error('电子书不存在'))
