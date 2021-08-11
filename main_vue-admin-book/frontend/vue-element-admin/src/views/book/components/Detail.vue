@@ -208,7 +208,7 @@ import MDinput from "@/components/MDinput";
 import Sticky from "@/components/Sticky"; // 粘性header组件
 import Warning from "./Warning";
 import EbookUpload from "@/components/EbookUpload";
-import { createBook, getBook,updateBook } from "@/api/book";
+import { createBook, getBook, updateBook } from "@/api/book";
 const defaultForm = {
   status: "draft",
   title: "",
@@ -335,7 +335,7 @@ export default {
         unzipPath,
       };
       this.contentsTree = contentsTree;
-      this.fileList=[{name:originalName}]
+      this.fileList = [{ name: originalName }];
     },
     submitForm() {
       this.$refs.postForm.validate((valid, fields) => {
@@ -368,9 +368,24 @@ export default {
               .catch((err) => {});
           } else {
             // 编辑模式(更新)
-            updateBook(book).then((response)=>{
-              console.log(response);
-            })
+            // 与新增电子书逻辑一样
+            updateBook(book)
+              .then((response) => {
+                // 可以封装一个onSuccess方法，
+                // 与上面的createBook新增电子书共用
+                console.log(response);
+                const { msg } = response;
+                console.log(msg);
+                this.$notify({
+                  title: "操作成功",
+                  message: msg,
+                  type: "success",
+                  duration: 2000,
+                });
+              })
+              .catch((err) => {
+                this.loading = false;
+              });
           }
         } else {
           // 标题必须填写

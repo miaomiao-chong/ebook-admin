@@ -87,4 +87,40 @@ function insert(model,tableName){
     }
   })
 }
-module.exports={querySql,queryOne,insert}
+
+function update(model,tableName,where){
+  return new Promise((resolve,reject)=>{
+    if(!isObject(model)){
+      reject(new Error('插入数据库失败，插入数据非对象'))
+    }else{
+      const entry=[]
+      Object.keys(model).forEach(key=>{
+        // 是自身的属性
+        if(model.hasOwnProperty(key)){
+          entry.push(`\`${key}\`='${model[key]}'`)
+        }
+      })
+      console.log(entry);
+      if(entry.length>0){
+        let sql=`update \`${tableName}\` set`
+        sql=`${sql} ${entry.join(',')} ${where}`
+        console.log(sql);
+        const conn=connect()
+        try {
+          conn.query(sql,(err,result)=>{
+            if(err){
+              reject(err)
+            }else{
+              resolve(result)
+            }
+          })
+        } catch (error) {
+          reject(error)
+        }finally{
+          conn.end()
+        }
+      }
+    }
+  })
+}
+module.exports={querySql,queryOne,insert,update}
