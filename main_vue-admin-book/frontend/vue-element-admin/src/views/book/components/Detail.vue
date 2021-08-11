@@ -147,10 +147,10 @@
                   <el-form-item
                     :label-width="labelWidth"
                     label="文件名称："
-                    prop="originalname"
+                    prop="originalName"
                   >
                     <el-input
-                      v-model="postForm.originalname"
+                      v-model="postForm.originalName"
                       placeholder="文件名称"
                       style="width: 100%"
                       disabled
@@ -184,7 +184,7 @@
                     prop="contents"
                   >
                     <div
-                      v-if="postForm.contents && postForm.contents.length > 0"
+                      v-if="contentsTree && contentsTree.length > 0"
                       class="contents-wrapper"
                     >
                       <el-tree
@@ -208,7 +208,7 @@ import MDinput from "@/components/MDinput";
 import Sticky from "@/components/Sticky"; // 粘性header组件
 import Warning from "./Warning";
 import EbookUpload from "@/components/EbookUpload";
-import { createBook } from "@/api/book";
+import { createBook, getBook,updateBook } from "@/api/book";
 const defaultForm = {
   status: "draft",
   title: "",
@@ -217,7 +217,7 @@ const defaultForm = {
   language: "",
   rootFile: "",
   cover: "",
-  originalname: "",
+  originalName: "",
   url: "",
   filename: "",
   coverPath: "",
@@ -274,9 +274,22 @@ export default {
       // loading: false,
     };
   },
+  created() {
+    if (this.isEdit) {
+      console.log(this.$route.params);
+      const fileName = this.$route.params.fileName;
+      this.getBookData(fileName);
+    }
+  },
   computed: {},
-  created() {},
+
   methods: {
+    getBookData(fileName) {
+      getBook(fileName).then((response) => {
+        console.log(response);
+        this.setData(response.data);
+      });
+    },
     onContentClick(data) {
       // console.log(data)
       if (data.text) {
@@ -297,7 +310,7 @@ export default {
         language,
         rootFile,
         cover,
-        originalname,
+        originalName,
         url,
         contents,
         contentsTree,
@@ -314,7 +327,7 @@ export default {
         rootFile,
         cover,
         url,
-        originalname,
+        originalName,
         contents,
         filename,
         coverPath,
@@ -322,6 +335,7 @@ export default {
         unzipPath,
       };
       this.contentsTree = contentsTree;
+      this.fileList=[{name:originalName}]
     },
     submitForm() {
       this.$refs.postForm.validate((valid, fields) => {
@@ -354,7 +368,9 @@ export default {
               .catch((err) => {});
           } else {
             // 编辑模式(更新)
-            updateBook(book);
+            updateBook(book).then((response)=>{
+              console.log(response);
+            })
           }
         } else {
           // 标题必须填写

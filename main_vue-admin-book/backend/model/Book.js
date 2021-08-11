@@ -340,7 +340,38 @@ class Book {
     }
     return `${UPLOAD_PATH}${path}`
   }
+  static genCoverUrl(book){
+    const {cover}=book
+    if(cover){
+      if(cover.startsWith('/')){
+        return `${UPLOAD_URL}${cover}`
+      }else{
+        return `${UPLOAD_URL}/${cover}`
+      }
+    }else{
+      return null
+    }
+  }
+  static getContentsTree(contents){
+    const contentsTree = []
+    contents.forEach(c => {
+      // 我们前面已经定义过label属性并赋值了 
+      c.children = []
+      //没有识别出pid时说明是一级目录
+      if (c.pid === '') {
+        contentsTree.push(c)
+      } else {
+        // pid不为空，说明有parent 先要找到parent
+        const parent = contents.find(_ =>
+          // 如果一样，就找到了parent
+          _.navId === c.pid
+        )
+        parent.children.push(c)
 
+      }
+    })
+    return contents
+  }
   // 判断路径是否存在静态方法
   static pathExists(path){
     if(path.startsWith(UPLOAD_PATH)){
@@ -349,6 +380,8 @@ class Book {
       return fs.existsSync(Book.genPath(path))
     }
   }
+
+ 
 }
 
 

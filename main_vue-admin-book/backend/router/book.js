@@ -8,6 +8,7 @@ const boom = require('boom')
 const { decode } = require('../utils/index')
 const bookService = require('../service/book')
 
+
 router.post('/upload',
   multer({ dest: `${UPLOAD_PATH}/book` }).single("file"),
   (req, res, next) => {
@@ -48,4 +49,39 @@ router.post('/create', (req, res, next) => {
   })
   console.log(book)
 })
+
+router.get('/get', (req, res, next) => {
+  const { fileName } = req.query
+  console.log("fileName", fileName);
+  // new Result("fds").success(res)
+  if (!fileName) {
+    next(boom.badRequest(new Error('参数fileName不能为空')))
+  } else {
+    bookService.getBook(fileName).then((book) => {
+      new Result(book, '获取图书信息成功').success(res)
+    }).catch((err) => {
+      next(boom.badImplementation(err))
+    })
+  }
+})
+
+router.post('/update', (req, res, next) => {
+  const decoded = decode(req)
+  console.log(req.body);
+  if (decoded && decoded.username) {
+    // book.username=decoded.username
+    req.body.username = decoded.username
+  }
+  const book = new Book(null, req.body)
+  bookService.updateBook(book).then(() => {
+    new Result('更新成功').success(res)
+  }).catch((err) => {
+    // console.log(err);
+    // 错误与前端联动 
+    next(boom.badImplementation(err))
+  })
+  console.log(book)
+})
+
+
 module.exports = router
