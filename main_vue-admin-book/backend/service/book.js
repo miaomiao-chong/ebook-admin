@@ -118,4 +118,21 @@ async function getCategory(){
   })
   return categoryList
 }
-module.exports = { insertBook, getBook ,updateBook,getCategory}
+async function listBook(query){
+  // console.log(query);
+  const {
+    category,author,title
+  }=query
+  let bookSql=`select * from book`
+  let where='where'
+  if(where!=='where'){
+    bookSql=`${bookSql} ${where}`
+  }
+  const list=await db.querySql(bookSql)
+
+  // return new Promise((resolve,reject)=>{
+  //   resolve(list)
+  // })
+  return {list}
+}
+module.exports = { listBook,insertBook, getBook ,updateBook,getCategory}
