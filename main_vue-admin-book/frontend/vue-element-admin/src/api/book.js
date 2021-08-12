@@ -21,3 +21,9 @@ export function getBook(fileName) {
     params:{fileName}
   })
 }
+export function getCategory() {
+  return request({
+    url: '/book/category',
+    method: 'get',
+  })
+}

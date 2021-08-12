@@ -10,7 +10,7 @@
         <el-button style="margin-left: 10px" type="success" @click="showHelp">
           显示帮助
         </el-button>
-        <el-button v-loading="loading" type="warning" @click="submitForm">
+        <el-button  type="warning" @click="submitForm">
           <!-- 点击编辑 -->
           {{ isEdit == true ? "点击编辑" : "点击添加" }}
         </el-button>
@@ -23,7 +23,6 @@
             <EbookUpload
               :file-list="fileList"
               @onError="handleError"
-              @onExceed="handleExceed"
               @beforeUpload="beforeUpload"
               @onSuccess="handleSuccess"
               @onRemove="handleRemove"
@@ -284,6 +283,9 @@ export default {
   computed: {},
 
   methods: {
+    showHelp(){
+      console.log("help");
+    },
     getBookData(fileName) {
       getBook(fileName).then((response) => {
         console.log(response);

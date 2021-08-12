@@ -104,4 +104,18 @@ function getBook(fileName) {
   })
 
 }
-module.exports = { insertBook, getBook ,updateBook}
+async function getCategory(){
+  const sql=`select * from category order by category asc`
+  const result=await db.querySql(sql)
+  console.log("result",result);
+  const categoryList=[]
+  result.forEach(item => {
+    categoryList.push({
+      label:item.categoryText,
+      value:item.category,
+      num:item.num
+    })
+  })
+  return categoryList
+}
+module.exports = { insertBook, getBook ,updateBook,getCategory}

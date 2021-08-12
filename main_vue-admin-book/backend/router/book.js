@@ -7,6 +7,7 @@ const Result = require('../model/Result')
 const boom = require('boom')
 const { decode } = require('../utils/index')
 const bookService = require('../service/book')
+const { result } = require('lodash')
 
 
 router.post('/upload',
@@ -84,5 +85,11 @@ router.post('/update', (req, res, next) => {
   // console.log(book)
 })
 
-
+router.get('/category',(req,res,next)=>{
+  bookService.getCategory().then(category=>{
+    new Result(category,'获取分类成功').success(res)
+  }).catch(err=>{ 
+    next(boom.badImplementation(err))
+  })
+})
 module.exports = router
