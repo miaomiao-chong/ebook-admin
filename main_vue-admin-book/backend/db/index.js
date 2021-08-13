@@ -123,4 +123,21 @@ function update(model,tableName,where){
     }
   })
 }
-module.exports={querySql,queryOne,insert,update}
+
+function and(where,key,value){
+  if(where==='where'){
+    // 是一个空的where语句
+    return `${where} \`${key}\`='${value}'`
+  }else{
+    return `${where} and \`${key}\`='${value}'`
+  }
+}
+function andLike(where,key,value){
+  if(where==='where'){
+    // 是一个空的where语句
+    return `${where} \`${key}\` like '%${value}%'`
+  }else{
+    return `${where} and \`${key}\` like '%${value}%'`
+  }
+}
+module.exports={andLike,querySql,queryOne,insert,update,and}

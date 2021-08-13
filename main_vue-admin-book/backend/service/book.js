@@ -66,17 +66,17 @@ function insertBook(book) {
 function updateBook(book) {
   return new Promise(async (resolve, reject) => {
     try {
-      if(book instanceof Book){
+      if (book instanceof Book) {
         // 获取book对象
-        console.log("更改后book",book);
-        const result=await getBook(book.fileName)
-        console.log("result",result);
-        if(result){
-          const model=book.toDb()
-          await db.update(model,'book',`where fileName='${book.fileName}'`)
+        console.log("更改后book", book);
+        const result = await getBook(book.fileName)
+        console.log("result", result);
+        if (result) {
+          const model = book.toDb()
+          await db.update(model, 'book', `where fileName='${book.fileName}'`)
           resolve()
         }
-      }else{
+      } else {
         reject(new Error('添加的图书对象不合法'))
       }
     } catch (error) {
@@ -92,47 +92,64 @@ function getBook(fileName) {
     const contentsSql = `select * from contents where fileName='${fileName}' order by \`order\``
     const book = await db.querySql(bookSql)
     const contents = await db.querySql(contentsSql)
-    if(book){
-      book[0].cover=Book.genCoverUrl(book[0])
-      book[0].contentsTree=Book.getContentsTree(contents)
+    if (book) {
+      book[0].cover = Book.genCoverUrl(book[0])
+      book[0].contentsTree = Book.getContentsTree(contents)
       // console.log("aaaaa",book[0]);
       resolve(book[0])
-    }else{
+    } else {
       reject(new Error('电子书不存在'))
     }
- 
+
   })
 
 }
-async function getCategory(){
-  const sql=`select * from category order by category asc`
-  const result=await db.querySql(sql)
-  console.log("result",result);
-  const categoryList=[]
+async function getCategory() {
+  const sql = `select * from category order by category asc`
+  const result = await db.querySql(sql)
+  console.log("result", result);
+  const categoryList = []
   result.forEach(item => {
     categoryList.push({
-      label:item.categoryText,
-      value:item.category,
-      num:item.num
+      label: item.categoryText,
+      value: item.category,
+      num: item.num
     })
   })
   return categoryList
 }
-async function listBook(query){
+async function listBook(query) {
   // console.log(query);
   const {
-    category,author,title
-  }=query
-  let bookSql=`select * from book`
-  let where='where'
-  if(where!=='where'){
-    bookSql=`${bookSql} ${where}`
+    // 默认值page=1,pageSize=20
+    category, author, title, page = 1, pageSize = 20, sort
+  } = query
+  // 偏移多少个数据量，page=0 offset=0查询第1个  
+  // page=1 offset=20 查询第21个
+  const offset = (page - 1) * pageSize
+  let bookSql = `select * from book`
+  let where = 'where'
+
+  // where  第二个参数 ：key  第三个：value
+  category && (where = db.and(where, "category", category))
+  title && (where = db.andLike(where, 'title', title))
+  author && (where = db.andLike(where, 'author', author))
+  if (where !== 'where') {
+    bookSql = `${bookSql} ${where}`
   }
-  const list=await db.querySql(bookSql)
+  if (sort) {
+    // symbol:第一个字符
+    const symbol = sort[0]
+    const colunm = sort.slice(1, sort.length)
+    const order = symbol === '+' ? 'asc' : 'desc'
+    bookSql = `${bookSql} order by \`${colunm}\` ${order}`
+  }
+  bookSql = `${bookSql} limit ${pageSize} offset ${offset}`
+  const list = await db.querySql(bookSql)
 
   // return new Promise((resolve,reject)=>{
   //   resolve(list)
   // })
-  return {list}
+  return { list }
 }
-module.exports = { listBook,insertBook, getBook ,updateBook,getCategory}
+module.exports = { listBook, insertBook, getBook, updateBook, getCategory }

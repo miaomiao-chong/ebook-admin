@@ -94,23 +94,25 @@
       >
       </el-table-column>
       <el-table-column
+        prop="originalName"
         label="书名"
         sortable="custom"
         align="center"
         width="180"
       >
-        <template slot-scope="{ row: { title } }">
-          <span>{{ title }}</span>
+        <template slot-scope="{ row: { titleWrapper } }">
+          <span v-html="titleWrapper"></span>
         </template>
       </el-table-column>
       <el-table-column
+          prop="author"
         label="作者"
         sortable="custom"
         align="center"
         width="250"
       >
-        <template slot-scope="{ row: { author } }">
-          <span>{{ author }}</span>
+        <template slot-scope="{ row: { authorWrapper } }">
+          <span v-html="authorWrapper"></span>
         </template>
       </el-table-column>
       <!-- 换种方式 ，不使用插槽 -->
@@ -187,7 +189,7 @@
       </el-table-column>
     </el-table>
     <!-- 翻页 -->
-    <Pagination :total="0" />
+    <Pagination :total="0" :pageSizes=[4,5,6] />
   </div>
 </template>
 
@@ -204,8 +206,7 @@ export default {
       tableKey: 0,
       listLoading: true,
       listQuery: {
-        page:1,
-        pageSize:5
+
       },
       showCover: false,
       // 查询条件是动态的
@@ -218,7 +219,37 @@ export default {
     this.getCategoryList();
     this.getList();
   },
+  created() {
+    //  对listQuery里的参数做一些解析
+    this.parseQuery()
+  },
   methods: {
+    parseQuery() {
+      // 默认参数
+      const listQuery = {
+        page: 1,
+        pageSize: 4,
+        sort:'+id'
+      };
+      this.listQuery = {
+        ...listQuery,
+        ...this.listQuery,
+      };
+    },
+    wrapperKeyword(k,v){
+      function highlight(value){
+        return `<span style="color:blue">${value}</span>`
+      }
+      if(!this.listQuery[k]){
+        return v
+      }else{
+        // return v.replace(new RegExp(this.listQuery[k]),v=>{
+        //   return highlight(v)
+        // })
+        // i:不区分大小写，g:全局
+        return v.replace(new RegExp(this.listQuery[k],'ig'),v=>highlight(v))
+      }
+    },
     getList() {
       this.listLoading = true;
       listBook(this.listQuery).then((response) => {
@@ -226,16 +257,31 @@ export default {
         const { list } = response.data;
         this.list = list;
         this.listLoading = false;
+        this.list.forEach(book=>{
+          book.titleWrapper=this.wrapperKeyword('title',book.title)
+          book.authorWrapper=this.wrapperKeyword('author',book.author)
+        })
       });
     },
     // 排序事件
     sortChange(data) {
       console.log("sortChange", data);
+      const {prop,order}=data
+      this.sortBy(prop,order)
     },
     getCategoryList() {
       getCategory().then((response) => {
         this.categoryList = response.data;
       });
+    },
+    sortBy(prop,order){
+      if(order=="ascending"){
+        // 在再query里增加个sort参数
+        this.listQuery.sort=`+${prop}`
+      }else{
+         this.listQuery.sort=`-${prop}`
+      }
+      this.handleFilter()
     },
     changeShowCover(value) {
       this.showCover = value;
@@ -249,10 +295,10 @@ export default {
       // 页面切换到/book/create 切换到上传图书
       this.$router.push("/book/create");
     },
-    handleUpdate(row){
-      console.log("handleUpdate",row);
-      this.$router.push(`/book/edit/${row.fileName}`)
-    }
+    handleUpdate(row) {
+      console.log("handleUpdate", row);
+      this.$router.push(`/book/edit/${row.fileName}`);
+    },
   },
 };
 </script>
