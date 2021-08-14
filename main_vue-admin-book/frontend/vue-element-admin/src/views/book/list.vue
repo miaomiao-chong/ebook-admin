@@ -105,7 +105,7 @@
         </template>
       </el-table-column>
       <el-table-column
-          prop="author"
+        prop="author"
         label="作者"
         sortable="custom"
         align="center"
@@ -175,9 +175,24 @@
         align="center"
         width="150"
       >
+        <template slot-scope="{ row: { filePath } }">
+          <span>{{ filePath | valueFilter }}</span>
+        </template>
       </el-table-column>
 
-      <el-table-column label="操作" align="center" width="120">
+      <el-table-column
+        label="上传时间"
+        prop="createDt"
+        sortable="custom"
+        align="center"
+        width="150"
+      >
+        <template slot-scope="{ row: { createDt } }">
+          <span>{{ createDt | timeFilter }}</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column label="操作" align="center" width="120" fixed="right">
         <template slot-scope="{ row }">
           <el-button
             type="text"
@@ -185,34 +200,62 @@
             @click="handleUpdate(row)"
             icon="el-icon-edit"
           ></el-button>
+          <el-button
+            type="text"
+            size="default"
+            @click="handleDelete(row)"
+            icon="el-icon-delete"
+            style="color: #ed3333"
+          ></el-button>
         </template>
       </el-table-column>
     </el-table>
+
     <!-- 翻页 -->
-    <Pagination :total="0" :pageSizes=[4,5,6] />
+    <Pagination
+      v-show="total > 0"
+      :total="total"
+      :pageSizes="[4, 5, 6]"
+      :page.sync="listQuery.page"
+      :limit.sync="listQuery.pageSize"
+      @pagination="getList"
+    />
   </div>
 </template>
 
 <script>
 import Pagination from "../../components/Pagination/index";
-import { getCategory, listBook } from "../../api/book";
+import { getCategory, listBook, deleteBook } from "../../api/book";
+import { parseTime } from "../../utils/index";
 // 这个老是报错，应该是依赖的问题，使用方法：v-waves
 // import waves from '../../components/directive/waves'
 export default {
   components: { Pagination },
+  filters: {
+    valueFilter(value) {
+      //   if(value){
+      //     return value
+      //   }else{
+      //     return '暂无'
+      //   }
+      return value || "暂无";
+    },
+    timeFilter(time) {
+      return time ? parseTime(time) : "无";
+    },
+  },
   data() {
     return {
       // 存在多个table的时候能够对table进行区分
       tableKey: 0,
       listLoading: true,
-      listQuery: {
-
-      },
+      listQuery: {},
       showCover: false,
       // 查询条件是动态的
       categoryList: [],
       // 表格数据源
       list: [],
+      total: 0,
     };
   },
   mounted() {
@@ -221,7 +264,7 @@ export default {
   },
   created() {
     //  对listQuery里的参数做一些解析
-    this.parseQuery()
+    this.parseQuery();
   },
   methods: {
     parseQuery() {
@@ -229,59 +272,62 @@ export default {
       const listQuery = {
         page: 1,
         pageSize: 4,
-        sort:'+id'
+        sort: "+id",
       };
       this.listQuery = {
         ...listQuery,
         ...this.listQuery,
       };
     },
-    wrapperKeyword(k,v){
-      function highlight(value){
-        return `<span style="color:blue">${value}</span>`
+    wrapperKeyword(k, v) {
+      function highlight(value) {
+        return `<span style="color:blue">${value}</span>`;
       }
-      if(!this.listQuery[k]){
-        return v
-      }else{
+      if (!this.listQuery[k]) {
+        return v;
+      } else {
         // return v.replace(new RegExp(this.listQuery[k]),v=>{
         //   return highlight(v)
         // })
         // i:不区分大小写，g:全局
-        return v.replace(new RegExp(this.listQuery[k],'ig'),v=>highlight(v))
+        return v.replace(new RegExp(this.listQuery[k], "ig"), (v) =>
+          highlight(v)
+        );
       }
     },
     getList() {
       this.listLoading = true;
       listBook(this.listQuery).then((response) => {
         console.log(response);
-        const { list } = response.data;
+        const { list, count } = response.data;
         this.list = list;
+        this.total = count;
         this.listLoading = false;
-        this.list.forEach(book=>{
-          book.titleWrapper=this.wrapperKeyword('title',book.title)
-          book.authorWrapper=this.wrapperKeyword('author',book.author)
-        })
+        this.list.forEach((book) => {
+          book.titleWrapper = this.wrapperKeyword("title", book.title);
+          book.authorWrapper = this.wrapperKeyword("author", book.author);
+        });
       });
     },
     // 排序事件
     sortChange(data) {
       console.log("sortChange", data);
-      const {prop,order}=data
-      this.sortBy(prop,order)
+      const { prop, order } = data;
+      this.sortBy(prop, order);
     },
     getCategoryList() {
       getCategory().then((response) => {
         this.categoryList = response.data;
       });
     },
-    sortBy(prop,order){
-      if(order=="ascending"){
+    sortBy(prop, order) {
+      if (order == "ascending") {
         // 在再query里增加个sort参数
-        this.listQuery.sort=`+${prop}`
-      }else{
-         this.listQuery.sort=`-${prop}`
+        this.listQuery.sort = `+${prop}`;
+      } else {
+        this.listQuery.sort = `-${prop}`;
       }
-      this.handleFilter()
+      this.handleFilter();
     },
     changeShowCover(value) {
       this.showCover = value;
@@ -298,6 +344,25 @@ export default {
     handleUpdate(row) {
       console.log("handleUpdate", row);
       this.$router.push(`/book/edit/${row.fileName}`);
+    },
+    handleDelete(row) {
+      console.log(row);
+      this.$confirm("此操作将永久删除电子书，是否继续", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      }).then(() => {
+        deleteBook(row.fileName).then((response) => {
+          this.$notify({
+            title: "成功",
+            message: response.msg || "删除成功",
+            type: "success",
+            duration: 2000,
+          });
+          // 重新刷新列表
+          this.handleFilter();
+        });
+      });
     },
   },
 };

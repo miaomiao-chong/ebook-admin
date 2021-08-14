@@ -144,12 +144,39 @@ async function listBook(query) {
     const order = symbol === '+' ? 'asc' : 'desc'
     bookSql = `${bookSql} order by \`${colunm}\` ${order}`
   }
+  // 统计一共多少电子书
+  let countSql = `select count(*) as count from book`
+  // 有查询条件
+  if (where != 'where') {
+    countSql = `${countSql} ${where}`
+  }
+  const count = await db.querySql(countSql)
+  console.log("count", count);
   bookSql = `${bookSql} limit ${pageSize} offset ${offset}`
   const list = await db.querySql(bookSql)
 
   // return new Promise((resolve,reject)=>{
   //   resolve(list)
   // })
-  return { list }
+  list.forEach(book => book.cover = Book.genCoverUrl(book))
+  return { list, count: count[0].count, page, pageSize }
 }
-module.exports = { listBook, insertBook, getBook, updateBook, getCategory }
+function deleteBook(fileName) {
+  return new Promise(async (resolve, reject) => {
+    resolve()
+    let book = await getBook(fileName)
+    if (book) {
+      // bookObj最大的用处是调用reset方法 删除相关文件
+      const bookObj = new Book(null, book)
+      const sql = `delete from book where fileName='${fileName}'`
+      db.querySql(sql).then(() => {
+        bookObj.reset()
+        resolve()
+      })
+    } else {
+      reject()
+    }
+  })
+}
+
+module.exports = { listBook, insertBook, getBook, updateBook, getCategory, deleteBook }
