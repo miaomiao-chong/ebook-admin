@@ -131,7 +131,7 @@ async function listBook(query) {
   let where = 'where'
 
   // where  第二个参数 ：key  第三个：value
-  category && (where = db.and(where, "category", category))
+  category && (where = db.and(where, "categoryText", category))
   title && (where = db.andLike(where, 'title', title))
   author && (where = db.andLike(where, 'author', author))
   if (where !== 'where') {

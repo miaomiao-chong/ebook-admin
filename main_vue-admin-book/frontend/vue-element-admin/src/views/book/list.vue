@@ -38,7 +38,7 @@
           v-for="item in categoryList"
           :key="item.value"
           :label="item.label + '(' + item.num + ')'"
-          :value="item.value"
+          :value="item.label"
         >
         </el-option>
       </el-select>
@@ -84,6 +84,7 @@
       highlight-current-row
       style="width: 100%"
       @sort-change="sortChange"
+      :default-sort="defaultSort"
     >
       <el-table-column
         prop="id"
@@ -218,7 +219,7 @@
       :pageSizes="[4, 5, 6]"
       :page.sync="listQuery.page"
       :limit.sync="listQuery.pageSize"
-      @pagination="getList"
+      @pagination="refresh"
     />
   </div>
 </template>
@@ -256,6 +257,7 @@ export default {
       // 表格数据源
       list: [],
       total: 0,
+      defaultSort: {},
     };
   },
   mounted() {
@@ -266,17 +268,44 @@ export default {
     //  对listQuery里的参数做一些解析
     this.parseQuery();
   },
+  beforeRouteUpdate(to, from, next) {
+    console.log(to, from);
+    if (to.path === from.path) {
+      // 判断query是否相等
+      const newQuery = Object.assign({}, to.query);
+      const oldQuery = Object.assign({}, from.query);
+      if (JSON.stringify(newQuery) !== JSON.stringify(oldQuery)) {
+        this.getList();
+      }
+    }
+    next();
+  },
   methods: {
     parseQuery() {
+      const query = Object.assign({}, this.$route.query);
+      let sort = "+id";
       // 默认参数
       const listQuery = {
         page: 1,
         pageSize: 4,
-        sort: "+id",
+        sort,
       };
+      if (query) {
+        query.page && (query.page = +query.page);
+        query.pageSize && (query.pageSize = +query.pageSize);
+        query.sort && (sort = query.sort);
+      }
+      const sortSymbol = sort[0];
+      const sortColumn = sort.slice(1, sort.length);
+      console.log(sortSymbol, sortColumn);
+      this.defaultSort = {
+        prop: sortColumn,
+        order: sortSymbol == "+" ? "ascending" : "descending",
+      };
+      console.log(this.defaultSort.prop, this.defaultSort.order);
       this.listQuery = {
+        ...query,
         ...listQuery,
-        ...this.listQuery,
       };
     },
     wrapperKeyword(k, v) {
@@ -333,9 +362,17 @@ export default {
       this.showCover = value;
       console.log(this.showCover);
     },
+    refresh() {
+      this.$router.push({
+        path: "/book/list",
+        query: this.listQuery,
+      });
+    },
     handleFilter() {
       console.log("handleFilter", this.listQuery);
-      this.getList();
+      // this.getList();
+      this.listQuery.page = 1;
+      this.refresh();
     },
     handleCreate() {
       // 页面切换到/book/create 切换到上传图书
